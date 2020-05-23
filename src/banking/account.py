@@ -3,14 +3,19 @@ import enum
 from typing import Optional, Union
 from uuid import uuid4, UUID
 
-from banking.error import ClosingCompanyAccountError, DailyWithdrawalAmountLimitExceededError, InsufficientFundError
+from banking.error import (
+    AccountClosedError, 
+    ClosingCompanyAccountError, 
+    DailyWithdrawalAmountLimitExceededError, 
+    InsufficientFundError
+)
 
 
 class Transaction:
     """Transaction object for all account transactions
     """
 
-    class TransactionType(enum.Enum, str):
+    class TransactionType(str, enum.Enum):
         CREDIT = "credit"
         DEBIT = "debit"
 
@@ -25,8 +30,6 @@ class Transaction:
     def create(cls, account_id: UUID, transaction_type:TransactionType, amount: float) -> "Transaction":
         return cls(account_id, transaction_type, amount)
 
-
-
 class BankAccount:
 
     MINIMUM_ACCOUNT_BALANCE = 0
@@ -40,7 +43,12 @@ class BankAccount:
     def create(cls) -> "BankAccount":
         return cls()
 
+    @property
+    def is_empty(self) -> bool:
+        return self.balance == 0
+
     def deposit(self, amount: float) -> Transaction:
+        self.assert_account_is_not_closed()
         assert amount > 0
         self.balance += amount
         return Transaction.create(
@@ -49,9 +57,10 @@ class BankAccount:
             amount
         )
 
-    def withdraw(self, amount: float, date: datetime.date) -> Transaction:
+    def withdraw(self, amount: float) -> Transaction:
         #todo support withdraw types (ATM and not ATM)?
-        self.assert_can_withdraw(amount, date)
+        self.assert_account_is_not_closed()
+        self.assert_can_withdraw(amount)
         return self.debit(amount)    
 
     def debit(self, amount: float) -> Transaction:
@@ -66,29 +75,35 @@ class BankAccount:
         """withdraw balance and close the account"""
         self.is_closed = True
         if self.balance > 0:
-            transaction = self.debit(self.balance)
-            return transaction
+            return self.debit(self.balance)
 
-    def assert_can_withdraw(self, amount: float, date: datetime.date):
+    def assert_can_withdraw(self, amount: float):
         assert amount > 0
         if (self.balance - amount) < self.MINIMUM_ACCOUNT_BALANCE:
             raise InsufficientFundError("Insufficient funds in account")
-
-            
-
+    
+    def assert_account_is_not_closed(self):
+        if self.is_closed:
+            raise AccountClosedError("Account is closed")
 
 class BankAccount_INT(BankAccount):
-    pass
+    """Foreign Bank Accounts"""
 
 class BankAccount_COVID19(BankAccount):
 
     MAX_DAILY_WITHDRAWAL: float = 1000
     THRESHOLD_DATE: datetime.date = datetime.datetime.strptime('01042020', '%d%m%Y').date()
 
-    def assert_can_withdraw(self, amount: float, date: datetime.date):
-        super().assert_can_withdraw(amount, date)
+
+    def withdraw(self, amount: float, total_sum_for_the_day: float, date: datetime.date) -> Transaction:
+        self.assert_account_is_not_closed()
+        self.assert_can_withdraw(amount, total_sum_for_the_day, date)
+        return self.debit(amount)
+
+    def assert_can_withdraw(self, amount: float, total_sum_for_the_day: float, date: datetime.date):
+        super().assert_can_withdraw(amount)
         if date >= self.THRESHOLD_DATE:
-            if (self.daily_withdrawal_transaction_sum(date) + amount) > self.MAX_DAILY_WITHDRAWAL:
+            if (total_sum_for_the_day + amount) > self.MAX_DAILY_WITHDRAWAL:
                 raise DailyWithdrawalAmountLimitExceededError(
                     f"Daily withdrawal amount limit of {self.MAX_DAILY_WITHDRAWAL} exceeded"
                 )

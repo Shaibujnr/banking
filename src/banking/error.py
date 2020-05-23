@@ -11,3 +11,11 @@ class ClosingCompanyAccountError(AccountError):
 
 class DailyWithdrawalAmountLimitExceededError(AccountError):
     pass
+
+class AccountClosedError(AccountError):
+    """
+    Raised when trying to perfom action on a closed account.
+    Should probably never be raised since closed account would
+    be deleted
+    """
+    pass
