@@ -108,14 +108,13 @@ class BankAccount_COVID19(BankAccount):
                     f"Daily withdrawal amount limit of {self.MAX_DAILY_WITHDRAWAL} exceeded"
                 )
 
-    def daily_withdrawal_transaction_sum(self, date: datetime.date) -> float:
-        #todo calculate current daily withdrawal sum from transactions
-        #todo collect date input or use current date?
-        return 0
-
 class BankAccount_COVID19_Company(BankAccount_COVID19):
 
     MINIMUM_ACCOUNT_BALANCE = 5000
 
     def close(self):
         raise ClosingCompanyAccountError("Company account cannot be closed")
+
+    def deposit(self, amount: float) -> Transaction:
+        #todo must first deposit be the minimum amount?
+        return super().deposit(amount)
