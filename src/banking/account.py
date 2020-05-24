@@ -4,7 +4,7 @@ from typing import Optional, Union
 from uuid import uuid4, UUID
 
 from banking.error import (
-    AccountClosedError, 
+    ATMWithdrawalNotAllowedError, AccountClosedError, 
     ClosingCompanyAccountError, 
     DailyWithdrawalAmountLimitExceededError, 
     InsufficientFundError, OpenAccountError
@@ -76,10 +76,22 @@ class BankAccount:
             amount
         )
 
-    def withdraw(self, amount: float, current_balance: float) -> Transaction:
-        #todo support withdraw types (ATM and not ATM)?
+    def withdraw(
+        self, 
+        amount: float, 
+        current_balance: float,
+        is_atm: bool,
+        occuring_on: date,
+        total_daily_amount_withdrawn: float
+    ) -> Transaction:
         self.assert_account_is_not_closed()
-        self.assert_can_withdraw(amount, current_balance)
+        self.assert_can_withdraw(
+            amount, 
+            current_balance,
+            is_atm,
+            occuring_on,
+            total_daily_amount_withdrawn
+        )
         return self.debit(amount)    
 
     def debit(self, amount: float) -> Transaction:
@@ -96,7 +108,14 @@ class BankAccount:
         if current_balance > 0:
             return self.debit(current_balance)
 
-    def assert_can_withdraw(self, amount: float, current_balance: float):
+    def assert_can_withdraw(
+        self, 
+        amount: float, 
+        current_balance: float,
+        is_atm: bool,
+        occuring_on: date,
+        total_daily_amount_withdrawn: float
+    ):
         assert amount > 0
         if (current_balance - amount) < self.MINIMUM_ACCOUNT_BALANCE:
             raise InsufficientFundError("Insufficient funds in account")
@@ -114,15 +133,25 @@ class BankAccount_COVID19(BankAccount):
     THRESHOLD_DATE: date = datetime.strptime('01042020', '%d%m%Y').date()
 
 
-    def withdraw(self, amount: float, current_balance: float, total_sum_for_the_day: float, date: date) -> Transaction:
-        self.assert_account_is_not_closed()
-        self.assert_can_withdraw(amount, current_balance, total_sum_for_the_day, date)
-        return self.debit(amount)
-
-    def assert_can_withdraw(self, amount: float, current_balance: float, total_sum_for_the_day: float, date: date):
-        super().assert_can_withdraw(amount, current_balance)
-        if date >= self.THRESHOLD_DATE:
-            if (total_sum_for_the_day + amount) > self.MAX_DAILY_WITHDRAWAL:
+    def assert_can_withdraw(
+        self, 
+        amount: float, 
+        current_balance: float,
+        is_atm: bool,
+        occuring_on: date,
+        total_daily_amount_withdrawn: float
+    ):
+        super().assert_can_withdraw(
+            amount, 
+            current_balance, 
+            is_atm, 
+            occuring_on, 
+            total_daily_amount_withdrawn
+        )
+        if occuring_on >= self.THRESHOLD_DATE:
+            if is_atm:
+                raise ATMWithdrawalNotAllowedError("ATM withdrawals are no longer allowed")
+            elif (total_daily_amount_withdrawn + amount) > self.MAX_DAILY_WITHDRAWAL:
                 raise DailyWithdrawalAmountLimitExceededError(
                     f"Daily withdrawal amount limit of {self.MAX_DAILY_WITHDRAWAL} exceeded"
                 )
