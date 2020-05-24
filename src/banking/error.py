@@ -19,3 +19,7 @@ class AccountClosedError(AccountError):
     be deleted
     """
     pass
+
+
+class OpenAccountError(AccountError):
+    pass

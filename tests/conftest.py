@@ -8,22 +8,20 @@ from banking.account import (
 
 @pytest.fixture
 def foreign_account() -> BankAccount_INT:
-    account = BankAccount_INT.create()
+    account = BankAccount_INT.open(0)
     assert isinstance(account, BankAccount)
     assert isinstance(account, BankAccount_INT)
     assert not account.is_closed 
-    assert account.balance == 0
     assert isinstance(account.account_id, UUID)
     assert account.MINIMUM_ACCOUNT_BALANCE == 0
     return account
 
 @pytest.fixture
 def covid_account() -> BankAccount_COVID19:
-    account = BankAccount_COVID19.create()
+    account = BankAccount_COVID19.open(0)
     assert isinstance(account, BankAccount)
     assert isinstance(account, BankAccount_COVID19)
     assert not account.is_closed 
-    assert account.balance == 0
     assert isinstance(account.account_id, UUID)
     assert account.MINIMUM_ACCOUNT_BALANCE == 0
     assert account.MAX_DAILY_WITHDRAWAL == 1000
@@ -32,11 +30,10 @@ def covid_account() -> BankAccount_COVID19:
 
 @pytest.fixture
 def company_account() -> BankAccount_COVID19_Company:
-    account = BankAccount_COVID19_Company.create()
+    account = BankAccount_COVID19_Company.open(5000)
     assert isinstance(account, BankAccount)
     assert isinstance(account, BankAccount_COVID19_Company)
     assert not account.is_closed 
-    assert account.balance == 0
     assert isinstance(account.account_id, UUID)
     assert account.MINIMUM_ACCOUNT_BALANCE == 5000
     assert account.MAX_DAILY_WITHDRAWAL == 1000
