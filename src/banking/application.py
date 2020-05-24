@@ -74,14 +74,28 @@ class Application:
         self.save_transaction(transaction)
         return transaction.transaction_id
 
-    def all_accounts(self) -> List[UUID]:
-        return self.ledger.all_account_ids()
+    def all_accounts(self) -> List[dict]:
+        result = []
+        for account_id in self.ledger.all_account_ids():
+            result.append(self.get_account_details(account_id))
+        return result
 
     def get_account_details(self, account_id: UUID) -> dict:
+        #todo add account type
         result = {}
         account = self.ledger.get_account(account_id)
         balance = self.ledger.get_account_balance(account_id)
         result["account_id"] = account_id
         result["opened_on"] = account.opened_on
         result["balance"] = balance
+        result["type"] = self.__get_account_type(account)
         return result
+
+    def __get_account_type(self, account: BankAccount):
+        if isinstance(account, BankAccount_COVID19):
+            return "covid"
+        elif isinstance(account, BankAccount_COVID19_Company):
+            return "company"
+        elif isinstance(account, BankAccount_INT):
+            return "international"
+        raise Exception("Invalid account type")

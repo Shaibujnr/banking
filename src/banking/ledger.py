@@ -36,7 +36,10 @@ class Ledger:
         pickle.dump(self.store, open(self.filename, 'wb'))
 
     def load(self):
-        self.store = pickle.load(open(self.filename, 'rb'))
+        try:
+            self.store = pickle.load(open(self.filename, 'rb'))
+        except EOFError:
+            self.store: StoreType = {"accounts": OrderedDict(), "transactions": OrderedDict()}
 
     def all_account_ids(self) -> typing.List[UUID]:
         return self.store["accounts"].keys()
@@ -67,6 +70,7 @@ class Ledger:
     def close_account(self, account_id: UUID):
         try:
             del self.store["accounts"][account_id]
+            self.persist()
         except KeyError:
             raise AccountNotFoundError("This account does not exist or has already been deleted")
 
