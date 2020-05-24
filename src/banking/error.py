@@ -27,3 +27,6 @@ class OpenAccountError(AccountError):
 
 class ATMWithdrawalNotAllowedError(AccountError):
     pass
+
+class AccountNotFoundError(AccountError):
+    pass

@@ -53,13 +53,13 @@ class BankAccount:
 
     MINIMUM_ACCOUNT_BALANCE = 0
 
-    def __init__(self) -> None:
+    def __init__(self, opened_on: date) -> None:
         self.account_id: UUID = uuid4()
-        self.is_closed: bool = False
+        self.opened_on: date = opened_on
 
     @classmethod
-    def open(cls, amount: float) -> "BankAccount":
-        account = cls()
+    def open(cls, amount: float, opened_on: date = datetime.now().date()) -> "BankAccount":
+        account = cls(opened_on=opened_on)
         if amount < cls.MINIMUM_ACCOUNT_BALANCE:
             raise OpenAccountError(f"deposit of {cls.MINIMUM_ACCOUNT_BALANCE} minimum is required to open this account")
         if amount > 0:
@@ -68,7 +68,6 @@ class BankAccount:
         return account
 
     def deposit(self, amount: float) -> Transaction:
-        self.assert_account_is_not_closed()
         assert amount > 0
         return Transaction.create(
             self.account_id,
@@ -84,7 +83,6 @@ class BankAccount:
         occuring_on: date,
         total_daily_amount_withdrawn: float
     ) -> Transaction:
-        self.assert_account_is_not_closed()
         self.assert_can_withdraw(
             amount, 
             current_balance,
@@ -103,8 +101,6 @@ class BankAccount:
 
     def close(self, current_balance: float) -> Optional[Transaction]:
         """withdraw balance and close the account"""
-        self.assert_account_is_not_closed()
-        self.is_closed = True
         if current_balance > 0:
             return self.debit(current_balance)
 
@@ -119,10 +115,6 @@ class BankAccount:
         assert amount > 0
         if (current_balance - amount) < self.MINIMUM_ACCOUNT_BALANCE:
             raise InsufficientFundError("Insufficient funds in account")
-    
-    def assert_account_is_not_closed(self):
-        if self.is_closed:
-            raise AccountClosedError("Account is closed")
 
 class BankAccount_INT(BankAccount):
     """Foreign Bank Accounts"""
@@ -160,6 +152,6 @@ class BankAccount_COVID19_Company(BankAccount_COVID19):
 
     MINIMUM_ACCOUNT_BALANCE = 5000
 
-    def close(self):
+    def close(self, current_balance: float):
         raise ClosingCompanyAccountError("Company account cannot be closed")
     

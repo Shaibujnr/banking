@@ -6,6 +6,7 @@ from uuid import UUID
 
 from typing import Optional
 from banking.account import BankAccount, Transaction
+from banking.error import AccountNotFoundError
 
 EntryType = typing.OrderedDict[UUID, typing.Union[BankAccount, Transaction]]
 StoreType = typing.Dict[str, EntryType]
@@ -37,6 +38,9 @@ class Ledger:
     def load(self):
         self.store = pickle.load(open(self.filename, 'rb'))
 
+    def all_account_ids(self) -> typing.List[UUID]:
+        return self.store["accounts"].keys()
+
     def get_account_balance(self, account_id: UUID) -> float:
         account_transactions: typing.List[Transaction] = []
         for transaction in self.store["transactions"].values():
@@ -52,13 +56,19 @@ class Ledger:
                 and transaction.account_id == account_id
             ):
                 withdrawal_transactions.append(transaction)
-        return sum(withdrawal_transactions) #type: ignore
+        return abs(sum(withdrawal_transactions)) #type: ignore
     
     def get_account(self, account_id: UUID) -> BankAccount:
-        return self.store["accounts"][account_id]
+        try:
+            return self.store["accounts"][account_id]
+        except KeyError:
+            raise AccountNotFoundError("Account not found, it has probably being closed")
 
     def close_account(self, account_id: UUID):
-        del self.store["accounts"][account_id]
+        try:
+            del self.store["accounts"][account_id]
+        except KeyError:
+            raise AccountNotFoundError("This account does not exist or has already been deleted")
 
     @property
     def is_empty(self) -> bool:

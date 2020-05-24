@@ -85,15 +85,12 @@ def test_withdraw_foreign_account_fail_insufficient_funds(foreign_account: BankA
         )
 
 def test_close_empty_account_ok(foreign_account: BankAccount_INT):
-    assert not foreign_account.is_closed
     transaction: Optional[Transaction] = foreign_account.close(0)
     assert transaction is None
-    assert foreign_account.is_closed
 
 def test_close_non_empty_account_ok(foreign_account: BankAccount_INT):
     transaction: Optional[Transaction] = foreign_account.close(400)
     assert transaction is not None
-    assert foreign_account.is_closed
     assert transaction.transaction_type == Transaction.TransactionType.DEBIT
     assert transaction.account_id == foreign_account.account_id
     assert transaction.amount == 400
@@ -151,7 +148,7 @@ def test_withdraw_more_than_max_on_restriction_date_fail(covid_account: BankAcco
 
 def test_close_company_account_fail(company_account: BankAccount_COVID19_Company):
     with pytest.raises(ClosingCompanyAccountError):
-        company_account.close()
+        company_account.close(400)
 
 def test_company_withdraw_from_minimum_balance(company_account: BankAccount_COVID19_Company):
     with pytest.raises(InsufficientFundError):
