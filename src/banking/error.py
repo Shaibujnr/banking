@@ -20,11 +20,6 @@ class AccountClosedError(AccountError):
     """
     pass
 
-
-class OpenAccountError(AccountError):
-    pass
-
-
 class ATMWithdrawalNotAllowedError(AccountError):
     pass
 

@@ -1,8 +1,13 @@
 from datetime import datetime, date
 from typing import Literal, Optional, Dict, Type, List
 from uuid import UUID
-from banking.account import BankAccount, BankAccount_COVID19, BankAccount_COVID19_Company, BankAccount_INT, Transaction
-from banking.error import OpenAccountError
+from banking.account import (
+    BankAccount, 
+    BankAccount_COVID19, 
+    BankAccount_COVID19_Company, 
+    BankAccount_INT, 
+    Transaction
+)
 from banking.ledger import Ledger
 
 
@@ -39,7 +44,7 @@ class Application:
         return self.ledger.save_object(transaction)
 
     def open_account(self, account_type: AccountType, amount: float = 0) -> UUID:
-        account: BankAccount =  self.ACCOUNT_TYPE_CLASS_MAPPING[account_type].open(amount, self.CURRENT_DATE)
+        account: BankAccount =  self.ACCOUNT_TYPE_CLASS_MAPPING[account_type].open(self.CURRENT_DATE)
         self.save_account(account)
         return account.account_id
 
@@ -70,7 +75,8 @@ class Application:
     
     def deposit(self, account_id: UUID, amount: float) -> UUID:
         account = self.ledger.get_account(account_id)
-        transaction = account.deposit(amount)
+        current_account_balance = self.ledger.get_account_balance(account_id)
+        transaction = account.deposit(amount, current_account_balance)
         self.save_transaction(transaction)
         return transaction.transaction_id
 
@@ -81,7 +87,6 @@ class Application:
         return result
 
     def get_account_details(self, account_id: UUID) -> dict:
-        #todo add account type
         result = {}
         account = self.ledger.get_account(account_id)
         balance = self.ledger.get_account_balance(account_id)

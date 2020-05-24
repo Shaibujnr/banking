@@ -8,7 +8,7 @@ from banking.account import (
     BankAccount_COVID19, BankAccount_COVID19_Company,
 )
 from banking.error import (
-    ATMWithdrawalNotAllowedError, ClosingCompanyAccountError, InsufficientFundError, AccountClosedError,
+    ATMWithdrawalNotAllowedError, AccountError, ClosingCompanyAccountError, InsufficientFundError, AccountClosedError,
     DailyWithdrawalAmountLimitExceededError,
 )
 
@@ -46,12 +46,12 @@ def test_transaction():
     assert sum(transaction_list) == (400 - 200 + 300 - 600)
 
 def test_deposit_foreign_account_ok(foreign_account: BankAccount_INT):
-    deposit_transaction: Transaction = foreign_account.deposit(400)
+    mock_current_balance = 0
+    deposit_transaction: Transaction = foreign_account.deposit(400, mock_current_balance)
     assert isinstance(deposit_transaction, Transaction)
     assert deposit_transaction.transaction_type == Transaction.TransactionType.CREDIT
     assert deposit_transaction.amount == 400
     assert deposit_transaction.account_id == foreign_account.account_id
-    #todo assert deposit_transaction.date
 
 def test_withdraw_foreign_account_ok(foreign_account: BankAccount_INT):
     mock_current_balance = 4000
@@ -159,3 +159,7 @@ def test_company_withdraw_from_minimum_balance(company_account: BankAccount_COVI
             company_account.THRESHOLD_DATE,
             0
         )
+
+def test_company_first_deposit_insufficient_fail(company_account: BankAccount_COVID19_Company):
+    with pytest.raises(AccountError):
+        company_account.deposit(4999, 0)

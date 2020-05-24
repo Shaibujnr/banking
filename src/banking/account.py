@@ -1,13 +1,13 @@
 from datetime import date, datetime
 import enum
-from typing import Optional, Union
+from typing import Optional, Union, List
 from uuid import uuid4, UUID
 
 from banking.error import (
-    ATMWithdrawalNotAllowedError, AccountClosedError, 
+    ATMWithdrawalNotAllowedError, AccountClosedError, AccountError, 
     ClosingCompanyAccountError, 
     DailyWithdrawalAmountLimitExceededError, 
-    InsufficientFundError, OpenAccountError
+    InsufficientFundError
 )
 
 
@@ -58,16 +58,11 @@ class BankAccount:
         self.opened_on: date = opened_on
 
     @classmethod
-    def open(cls, amount: float, opened_on: date = datetime.now().date()) -> "BankAccount":
+    def open(cls, opened_on: date = datetime.now().date()) -> "BankAccount":
         account = cls(opened_on=opened_on)
-        if amount < cls.MINIMUM_ACCOUNT_BALANCE:
-            raise OpenAccountError(f"deposit of {cls.MINIMUM_ACCOUNT_BALANCE} minimum is required to open this account")
-        if amount > 0:
-            #todo persist transaction?
-            transaction = account.deposit(amount)
         return account
 
-    def deposit(self, amount: float) -> Transaction:
+    def deposit(self, amount: float, current_balance: float) -> Transaction:
         assert amount > 0
         return Transaction.create(
             self.account_id,
@@ -142,8 +137,9 @@ class BankAccount_COVID19(BankAccount):
         )
         if occuring_on >= self.THRESHOLD_DATE:
             if is_atm:
-                raise ATMWithdrawalNotAllowedError("ATM withdrawals are no longer allowed")
+                raise ATMWithdrawalNotAllowedError("ATM withdrawals are no longer allowed as from April 1, 2020")
             elif (total_daily_amount_withdrawn + amount) > self.MAX_DAILY_WITHDRAWAL:
+                #todo change name of this error?
                 raise DailyWithdrawalAmountLimitExceededError(
                     f"Daily withdrawal amount limit of {self.MAX_DAILY_WITHDRAWAL} exceeded"
                 )
@@ -151,6 +147,12 @@ class BankAccount_COVID19(BankAccount):
 class BankAccount_COVID19_Company(BankAccount_COVID19):
 
     MINIMUM_ACCOUNT_BALANCE = 5000
+
+    def deposit(self, amount: float, current_balance: float) -> Transaction:
+        if current_balance == 0 and amount < self.MINIMUM_ACCOUNT_BALANCE: 
+            raise AccountError(f"Company first deposit must be non-returnable government loan\
+                of {self.MINIMUM_ACCOUNT_BALANCE}")
+        return super().deposit(amount, current_balance)
 
     def close(self, current_balance: float):
         raise ClosingCompanyAccountError("Company account cannot be closed")

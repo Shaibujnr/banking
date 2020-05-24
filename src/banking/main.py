@@ -1,7 +1,7 @@
 import typer
 from uuid import UUID
 from banking.application import Application
-from banking.error import AccountError, DailyWithdrawalAmountLimitExceededError, InsufficientFundError, OpenAccountError
+from banking.error import AccountError
 
 banking_app: Application = Application("ledger.pkl")
 banking_app.start()
@@ -10,23 +10,16 @@ app = typer.Typer()
 
 
 @app.command()
-def open(account_type: str, amount: float = typer.Argument(0, min=0)):
+def open(account_type: str):
     """Open an account. Some accounts type usually require a minimum amount deposit
     to be successfully opened. In this case, company accounts require a minimum initial
     deposit of 5000.
 
     Arguments:
         account_type {str} -- One of either 'international', 'covid' or 'company'
-
-    Keyword Arguments:
-        amount {float} -- Initial deposit (default: {typer.Argument(0, min=0)})
     """
-    try:
-        account_id = banking_app.open_account(account_type, amount) #type: ignore
-        typer.secho(f"{account_type} Account successfully created, Here's the account id {account_id}")
-    except OpenAccountError:
-        typer.echo("Company acounts must be opened with an initial deposit of at least 5000")
-        typer.Abort()
+    account_id = banking_app.open_account(account_type, amount) #type: ignore
+    typer.secho(f"{account_type} Account successfully created, Here's the account id {account_id}")
 
 
 @app.command()
@@ -40,7 +33,6 @@ def withdraw(account_id: str, amount: float, atm: bool = False):
     Keyword Arguments:
         atm {bool} -- Is this an atm withdrawal? (default: {False})
     """
-    #todo ATM withdrawals were no longer allowed as from April 1, 2020
     try:
         transaction_id = banking_app.withdraw(UUID(account_id), amount, atm)
         typer.echo(f"Withdrawal successful, transaction id is {transaction_id}")

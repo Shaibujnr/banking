@@ -3,7 +3,12 @@ from datetime import datetime, timedelta
 from uuid import UUID
 from banking.account import BankAccount, BankAccount_COVID19
 from banking.application import Application
-from banking.error import ATMWithdrawalNotAllowedError, AccountNotFoundError, ClosingCompanyAccountError, DailyWithdrawalAmountLimitExceededError, OpenAccountError
+from banking.error import (
+    ATMWithdrawalNotAllowedError, 
+    AccountNotFoundError, 
+    ClosingCompanyAccountError, 
+    DailyWithdrawalAmountLimitExceededError
+)
 
 
 def test_open_account(app: Application):
@@ -77,10 +82,6 @@ def test_withdraw_more_than_max_from_covid_account_before_april_1_2020_ok(app: A
         app.ledger.get_total_withdrawn_amount_by_date(account_id, app.CURRENT_DATE)
         > 1000
     )
-
-def test_open_company_with_insufficient_fund_fail(app: Application):
-    with pytest.raises(OpenAccountError):
-        app.open_account("company", 4999)
 
 def test_close_company_account_fail(app: Application):
     account_id = app.open_account("company", 5000)
