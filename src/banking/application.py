@@ -49,9 +49,18 @@ class Application:
         return account.account_id
 
     def close_account(self, account_id: UUID) -> Optional[UUID]:
-        account = self.ledger.get_account(account_id)
-        current_account_balance: float = self.ledger.get_account_balance(account_id)
-        transaction = account.close(current_account_balance, self.CURRENT_DATE)
+        ledger: Ledger = self.ledger
+        account = ledger.get_account(account_id)
+        current_account_balance: float = ledger.get_account_balance(account_id)
+        amount_withdrawn_today = ledger.get_total_withdrawn_amount_by_date(
+            account_id,
+            self.CURRENT_DATE
+        )
+        transaction = account.close(
+            current_account_balance,
+            self.CURRENT_DATE,
+            amount_withdrawn_today
+        )
         if transaction is not None:
             self.save_transaction(transaction)
         self.ledger.close_account(account_id)

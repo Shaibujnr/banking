@@ -9,7 +9,7 @@ class InsufficientFundError(AccountError):
 class ClosingCompanyAccountError(AccountError):
     pass
 
-class DailyWithdrawalAmountLimitExceededError(AccountError):
+class DailyWithdrawalLimitError(AccountError):
     pass
 
 class AccountClosedError(AccountError):

@@ -86,7 +86,7 @@ def ls(show_accounts: bool = True, show_transactions: bool = True, only_ids: boo
         show_transactions {bool} -- Display transactions and details (default: {True})
         only_ids {bool} -- Display ids only no details (default: {False})
     """
-    #todo display transactions properly
+    #todo display entities properly
     accounts = []
     transactions = []
     store = banking_app.ledger.store

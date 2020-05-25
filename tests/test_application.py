@@ -7,7 +7,7 @@ from banking.error import (
     ATMWithdrawalNotAllowedError, 
     AccountNotFoundError, 
     ClosingCompanyAccountError, 
-    DailyWithdrawalAmountLimitExceededError
+    DailyWithdrawalLimitError
 )
 
 
@@ -59,7 +59,7 @@ def test_withdraw_more_than_max_from_covid_account_on_april_1_2020_fail(app: App
     assert app.ledger.get_account_balance(account_id) == (4000 - 200)
     app.withdraw(account_id, 500, False)
     assert app.ledger.get_account_balance(account_id) == (4000 - 500 - 200)
-    with pytest.raises(DailyWithdrawalAmountLimitExceededError):
+    with pytest.raises(DailyWithdrawalLimitError):
         app.withdraw(account_id, 500, False)
     assert app.ledger.get_account_balance(account_id) == (4000 - 500 - 200)
 

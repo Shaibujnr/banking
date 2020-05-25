@@ -6,7 +6,7 @@ from uuid import uuid4, UUID
 from banking.error import (
     ATMWithdrawalNotAllowedError, AccountClosedError, AccountError, 
     ClosingCompanyAccountError, 
-    DailyWithdrawalAmountLimitExceededError, 
+    DailyWithdrawalLimitError, 
     InsufficientFundError
 )
 
@@ -68,8 +68,7 @@ class BankAccount:
 
     @classmethod
     def open(cls, opened_on: date = datetime.now().date()) -> "BankAccount":
-        account = cls(opened_on=opened_on)
-        return account
+        return cls(opened_on=opened_on)
 
     def deposit(
         self, 
@@ -100,21 +99,28 @@ class BankAccount:
             occuring_on,
             total_daily_amount_withdrawn
         )
-        return self.debit(amount, occuring_on)    
-
-    def debit(self, amount: float, occuring_on: Optional[date] = None) -> Transaction:
-        #todo should debit?
         return Transaction.create(
             self.account_id,
             Transaction.TransactionType.DEBIT,
             amount,
             occuring_on
-        )
+        )       
 
-    def close(self, current_balance: float, occuring_on: Optional[date] = None) -> Optional[Transaction]:
+    def close(
+        self, 
+        current_balance: float, 
+        occuring_on: date,
+        total_daily_amount_withdrawn: float
+    ) -> Optional[Transaction]:
         """withdraw balance and close the account"""
         if current_balance > 0:
-            return self.debit(current_balance, occuring_on)
+            return self.withdraw(
+                current_balance, 
+                current_balance,
+                False,
+                occuring_on,
+                total_daily_amount_withdrawn
+            )
 
     def assert_can_withdraw(
         self, 
@@ -156,8 +162,7 @@ class BankAccount_COVID19(BankAccount):
             if is_atm:
                 raise ATMWithdrawalNotAllowedError("ATM withdrawals are no longer allowed as from April 1, 2020")
             elif (total_daily_amount_withdrawn + amount) > self.MAX_DAILY_WITHDRAWAL:
-                #todo change name of this error?
-                raise DailyWithdrawalAmountLimitExceededError(
+                raise DailyWithdrawalLimitError(
                     f"Daily withdrawal amount limit of {self.MAX_DAILY_WITHDRAWAL} exceeded"
                 )
 
@@ -172,10 +177,14 @@ class BankAccount_COVID19_Company(BankAccount_COVID19):
         occurring_on: Optional[date] = None
     ) -> Transaction:
         if current_balance == 0 and amount < self.MINIMUM_ACCOUNT_BALANCE: 
-            raise AccountError(f"Company first deposit must be non-returnable government loan\
+            raise AccountError(f"Company's first deposit must be non-returnable government loan\
                 of {self.MINIMUM_ACCOUNT_BALANCE}")
         return super().deposit(amount, current_balance, occurring_on)
 
-    def close(self, current_balance: float, occuring_on: Optional[date] = None) -> Optional[Transaction]:
+    def close(
+        self, 
+        current_balance: float, 
+        occuring_on: date, 
+        total_daily_amount_withdrawn: float
+    ) -> Optional[Transaction]:
         raise ClosingCompanyAccountError("Company account cannot be closed")
-    

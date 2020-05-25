@@ -5,7 +5,6 @@ from banking.account import BankAccount, BankAccount_INT, Transaction
 from banking.ledger import Ledger
 
 #todo write better ledger tests
-#todo check type ignores
 
 def test_ledger_save(foreign_account, covid_account, company_account):
     ledger = Ledger("test_ledger.p")
