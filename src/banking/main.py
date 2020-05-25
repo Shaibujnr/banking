@@ -6,10 +6,10 @@ from uuid import UUID
 import json
 import typer
 
-from banking.application import Application
+from banking.application import Application, create_application
 from banking.error import AccountError
 
-banking_app: Application = Application("ledger.pkl")
+banking_app: Application = create_application("ledger.pkl")
 banking_app.start()
 
 app = typer.Typer()
@@ -17,7 +17,8 @@ app = typer.Typer()
 DATE_FORMAT = "%Y-%m-%d"
 
 
-def set_occuring_on(func: Callable):
+
+def set_occurring_on(func: Callable):
     """Decorator function to set bank applications current
     running date and performing whatever action is required
     on that date.
@@ -26,11 +27,13 @@ def set_occuring_on(func: Callable):
     @wraps(func)
     def wrapper_func(*args, **kwargs):
         try:
-            occuring_on: str = kwargs.get("date")  # type: ignore
-            if occuring_on is None:
+            occurring_on: str = kwargs.get("date")  # type: ignore
+            if occurring_on is None:
                 return func(*args, **kwargs)
-            occuring_on_date: date = datetime.strptime(occuring_on, DATE_FORMAT).date()
-            banking_app.change_current_date(occuring_on_date)
+            occurring_on_date: date = datetime.strptime(
+                occurring_on, DATE_FORMAT
+            ).date()
+            banking_app.change_current_date(occurring_on_date)
             typer.echo(
                 f"Current date set to {banking_app.CURRENT_DATE.strftime(DATE_FORMAT)}"
             )
@@ -51,7 +54,7 @@ def style(text: str, is_success: bool = True, bg=False) -> str:
 
 
 @app.command()
-@set_occuring_on
+@set_occurring_on
 def open(account_type: str, date: str = None):
     """Open an account of a specific type.
 
@@ -88,7 +91,7 @@ def open(account_type: str, date: str = None):
 
 
 @app.command()
-@set_occuring_on
+@set_occurring_on
 def withdraw(account_id: str, amount: float, atm: bool = False, date: str = None):
     """Withdraw funds from an account
 
@@ -119,7 +122,7 @@ def withdraw(account_id: str, amount: float, atm: bool = False, date: str = None
 
 
 @app.command()
-@set_occuring_on
+@set_occurring_on
 def deposit(account_id: str, amount: float, date: str = None):
     """Deposit funds into an account
 
@@ -251,7 +254,7 @@ def show(entity_id: str):
 
 
 @app.command()
-@set_occuring_on
+@set_occurring_on
 def close(account_id: str, date: str = None):
     """Close an account
 

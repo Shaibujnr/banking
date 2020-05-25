@@ -21,9 +21,11 @@ class Ledger:
         }
 
     def save_object(self, obj: typing.Union[BankAccount, Transaction]):
+        """Store a single account or transaction object"""
         self.save([obj])
 
     def save(self, objs: typing.List[typing.Union[BankAccount, Transaction]]):
+        """Store a list of account and/or transacion objects"""
         for obj in objs:
             self.save_to_store(obj)
         self.persist()
@@ -40,6 +42,7 @@ class Ledger:
         pickle.dump(self.store, open(self.filename, "wb"))
 
     def load(self):
+        """Load transaction and accounts from store"""
         try:
             self.store = pickle.load(open(self.filename, "rb"))
         except EOFError:
@@ -49,12 +52,23 @@ class Ledger:
             }
 
     def all_account_ids(self) -> typing.List[UUID]:
+        """Return all account Ids"""
         return self.store["accounts"].keys()
 
     def all_transaction_ids(self) -> typing.List[UUID]:
+        """Return all transaction ids"""
         return self.store["transactions"].keys()
 
     def get_account_balance(self, account_id: UUID) -> float:
+        """Fetch and calculate the account balance of a transacion
+        from all it's previous transactions
+
+        Arguments:
+            account_id {UUID} -- Target account id
+
+        Returns:
+            float -- account balance
+        """
         account_transactions: typing.List[Transaction] = []
         for transaction in self.store["transactions"].values():
             if transaction.account_id == account_id:
@@ -62,6 +76,16 @@ class Ledger:
         return sum(account_transactions)  # type: ignore
 
     def get_total_withdrawn_amount_by_date(self, account_id: UUID, date: date) -> float:
+        """Get the sum of amount withdrawn by the account on the day 
+        denoted by the passed in date.
+
+        Arguments:
+            account_id {UUID} -- Target account id
+            date {date} -- The date to fetch sum of withdrawal transactions for
+
+        Returns:
+            float -- sum of amount of each withdrawal transaction on that day
+        """
         withdrawal_transactions = []
         for transaction in self.store["transactions"].values():
             if (
@@ -80,6 +104,7 @@ class Ledger:
             )
 
     def close_account(self, account_id: UUID):
+        """Delete account from store"""
         try:
             del self.store["accounts"][account_id]
             self.persist()
@@ -90,4 +115,5 @@ class Ledger:
 
     @property
     def is_empty(self) -> bool:
+        """Returns True if store is empty i.e no accounts and no transactions"""
         return len(self.store["accounts"]) == 0 and len(self.store["transactions"]) == 0

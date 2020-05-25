@@ -122,11 +122,13 @@ def test_close_covid_account_with_balance_more_than_daily_max_fail(
 def test_withdraw_more_than_max_before_restriction_date_ok(
     covid_account: BankAccount_COVID19,
 ):
-    threshold_date: date = covid_account.THRESHOLD_DATE
-    threshold_datetime: datetime = datetime(
-        threshold_date.year, threshold_date.month, threshold_date.day
+    restriction_date: date = covid_account.RESTRICTION_DATE
+    restriction_datetime: datetime = datetime(
+        restriction_date.year, restriction_date.month, restriction_date.day
     )
-    day_before_restriction_date: date = (threshold_datetime - timedelta(days=1)).date()
+    day_before_restriction_date: date = (
+        restriction_datetime - timedelta(days=1)
+    ).date()
     max_amount = covid_account.MAX_DAILY_WITHDRAWAL
     mock_current_balance = max_amount * 3
     amount_to_withdraw = max_amount * 2
@@ -144,7 +146,7 @@ def test_withdraw_more_than_max_before_restriction_date_ok(
 
 
 def test_atm_withdraw_after_restriction_date_fail(covid_account: BankAccount_COVID19):
-    threshold_date: date = covid_account.THRESHOLD_DATE
+    restriction_date: date = covid_account.RESTRICTION_DATE
     max_amount = covid_account.MAX_DAILY_WITHDRAWAL
     mock_current_balance = max_amount * 3
     amount_to_withdraw = max_amount
@@ -154,7 +156,7 @@ def test_atm_withdraw_after_restriction_date_fail(covid_account: BankAccount_COV
             amount_to_withdraw,
             mock_current_balance,
             True,
-            threshold_date,
+            restriction_date,
             total_amount_withdrawn,
         )
 
@@ -162,7 +164,7 @@ def test_atm_withdraw_after_restriction_date_fail(covid_account: BankAccount_COV
 def test_withdraw_more_than_max_on_restriction_date_fail(
     covid_account: BankAccount_COVID19,
 ):
-    threshold_date: date = covid_account.THRESHOLD_DATE
+    restriction_date: date = covid_account.RESTRICTION_DATE
     max_amount = covid_account.MAX_DAILY_WITHDRAWAL
     mock_current_balance = max_amount * 3
     amount_to_withdraw = max_amount
@@ -172,7 +174,7 @@ def test_withdraw_more_than_max_on_restriction_date_fail(
             amount_to_withdraw,
             mock_current_balance,
             False,
-            threshold_date,
+            restriction_date,
             total_amount_withdrawn,
         )
 
@@ -191,7 +193,7 @@ def test_company_withdraw_from_minimum_balance(
     company_account: BankAccount_COVID19_Company,
 ):
     with pytest.raises(InsufficientFundError):
-        company_account.withdraw(2001, 7000, False, company_account.THRESHOLD_DATE, 0)
+        company_account.withdraw(2001, 7000, False, company_account.RESTRICTION_DATE, 0)
 
 
 def test_company_first_deposit_insufficient_fail(

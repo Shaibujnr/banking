@@ -3,30 +3,23 @@ class AccountError(Exception):
 
 
 class InsufficientFundError(AccountError):
-    pass
+    """Raised when trying to withdrw more than available balance"""
 
 
 class ClosingCompanyAccountError(AccountError):
-    pass
+    """Raised when trying to close a company account"""
 
 
 class DailyWithdrawalLimitError(AccountError):
-    pass
-
-
-class AccountClosedError(AccountError):
-    """
-    Raised when trying to perfom action on a closed account.
-    Should probably never be raised since closed account would
-    be deleted
-    """
-
-    pass
+    """Raised when trying to exceed the daily withdrawal limit set 
+    on non-foreign accounts"""
 
 
 class ATMWithdrawalNotAllowedError(AccountError):
-    pass
+    """Raised when trying to withdraw from non-foreign accounts 
+    via atm after restriction date"""
 
 
 class AccountNotFoundError(AccountError):
-    pass
+    """Raised when trying to perform action a non-existing or deleted account
+    """
