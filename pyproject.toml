@@ -3,6 +3,7 @@ name = "banking"
 version = "0.1.0"
 description = ""
 authors = ["Shaibu Shaibu <s.shaibu.jnr@gmail.com>"]
+readme = "README.md"
 
 
 [tool.poetry.scripts]
