@@ -8,6 +8,7 @@ import typer
 
 from banking.application import Application, create_application
 from banking.error import AccountError
+from banking.date_helper import get_todays_date
 
 banking_app: Application = create_application("ledger.pkl")
 banking_app.start()
@@ -17,9 +18,8 @@ app = typer.Typer()
 DATE_FORMAT = "%Y-%m-%d"
 
 
-
 def set_occurring_on(func: Callable):
-    """Decorator function to set bank applications current
+    """Decorator function to set applications current
     running date and performing whatever action is required
     on that date.
     """
@@ -34,9 +34,7 @@ def set_occurring_on(func: Callable):
                 occurring_on, DATE_FORMAT
             ).date()
             banking_app.change_current_date(occurring_on_date)
-            typer.echo(
-                f"Current date set to {banking_app.CURRENT_DATE.strftime(DATE_FORMAT)}"
-            )
+            typer.echo(f"Current date set to {get_todays_date().strftime(DATE_FORMAT)}")
             func(*args, **kwargs)
         except ValueError:
             typer.echo("Invalid date")

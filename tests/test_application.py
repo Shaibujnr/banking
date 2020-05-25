@@ -1,7 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from uuid import UUID
 
 import pytest
+from pytest_mock import MockFixture
 
 from banking.account import BankAccount
 from banking.application import Application
@@ -11,6 +12,15 @@ from banking.error import (
     ClosingCompanyAccountError,
     DailyWithdrawalLimitError,
 )
+
+
+def test_change_current_date(app: Application):
+    from banking.date_helper import get_todays_date
+
+    assert get_todays_date() == datetime(2020, 4, 1).date()
+    app.change_current_date(datetime(2018, 2, 23).date())
+    assert get_todays_date() == datetime(2018, 2, 23).date()
+    app.change_current_date(datetime(2020, 4, 1).date())
 
 
 def test_open_account(app: Application):
@@ -27,7 +37,6 @@ def test_get_account_details(app: Application):
     account_details = app.get_account_details(account_id)
     assert isinstance(account_details, dict)
     assert account_details["balance"] == "0 PLN"
-    assert account_details["opened_on"] == app.CURRENT_DATE.strftime("%Y-%m-%d")
 
 
 def test_deposit_into_account(app: Application):
@@ -37,8 +46,11 @@ def test_deposit_into_account(app: Application):
     assert app.ledger.get_account_balance(account_id) == 400
 
 
-def test_atm_withdrawal_from_covid_account_on_april_1_2020_fail(app: Application):
-    assert app.CURRENT_DATE == datetime(2020, 4, 1).date()
+def test_atm_withdrawal_from_covid_account_on_april_1_2020_fail(
+    app: Application, mocker: MockFixture
+):
+    mock_todays_date = mocker.patch("banking.application.get_todays_date")
+    mock_todays_date.return_value = datetime(2020, 4, 1).date()
     account_id = app.open_account("covid")
     app.deposit(account_id, 200)
     with pytest.raises(ATMWithdrawalNotAllowedError):
@@ -48,9 +60,7 @@ def test_atm_withdrawal_from_covid_account_on_april_1_2020_fail(app: Application
 
 def test_atm_withdrawal_from_covid_account_before_april_1_2020_ok(app: Application):
     before = (datetime(2020, 4, 1) - timedelta(days=1)).date()
-    assert before < app.CURRENT_DATE
     app.change_current_date(before)
-    assert app.CURRENT_DATE == before
     account_id = app.open_account("covid")
     app.deposit(account_id, 200)
     app.withdraw(account_id, 10, True)
@@ -60,7 +70,7 @@ def test_atm_withdrawal_from_covid_account_before_april_1_2020_ok(app: Applicati
 def test_withdraw_more_than_max_from_covid_account_on_april_1_2020_fail(
     app: Application,
 ):
-    assert app.CURRENT_DATE == datetime(2020, 4, 1).date()
+    app.change_current_date(datetime(2020, 4, 1).date())
     account_id = app.open_account("covid")
     app.deposit(account_id, 4000)
     assert app.ledger.get_account_balance(account_id) == 4000
@@ -70,6 +80,9 @@ def test_withdraw_more_than_max_from_covid_account_on_april_1_2020_fail(
     assert app.ledger.get_account_balance(account_id) == (4000 - 500 - 200)
     with pytest.raises(DailyWithdrawalLimitError):
         app.withdraw(account_id, 500, False)
+        print(
+            f"\n\namount withdrawn today is {app.ledger.get_total_withdrawn_amount_by_date(account_id, datetime(2020, 4, 1).date())}"
+        )
     assert app.ledger.get_account_balance(account_id) == (4000 - 500 - 200)
 
 
@@ -77,9 +90,7 @@ def test_withdraw_more_than_max_from_covid_account_before_april_1_2020_ok(
     app: Application,
 ):
     before = (datetime(2020, 4, 1) - timedelta(days=1)).date()
-    assert before < app.CURRENT_DATE
     app.change_current_date(before)
-    assert app.CURRENT_DATE == before
     account_id = app.open_account("covid")
     app.deposit(account_id, 4000)
     assert app.ledger.get_account_balance(account_id) == 4000
@@ -90,10 +101,8 @@ def test_withdraw_more_than_max_from_covid_account_before_april_1_2020_ok(
     app.withdraw(account_id, 500, False)
     current_balance = app.ledger.get_account_balance(account_id)
     assert current_balance == (4000 - 500 - 200 - 500)
-    assert (
-        app.ledger.get_total_withdrawn_amount_by_date(account_id, app.CURRENT_DATE)
-        > 1000
-    )
+    account = app.ledger.get_account(account_id)
+    assert account.amount_withdrawn_today > 1000
 
 
 def test_close_company_account_fail(app: Application):

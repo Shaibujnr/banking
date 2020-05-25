@@ -7,8 +7,11 @@ from uuid import UUID
 
 from banking.account import BankAccount, Transaction
 from banking.error import AccountNotFoundError
+from banking.date_helper import get_todays_date
 
-EntryType = typing.OrderedDict[UUID, typing.Union[BankAccount, Transaction]]
+EntryType = typing.OrderedDict[
+    UUID, typing.Union[typing.Type[BankAccount], Transaction]
+]
 StoreType = typing.Dict[str, EntryType]
 
 
@@ -32,7 +35,7 @@ class Ledger:
 
     def save_to_store(self, obj: typing.Union[BankAccount, Transaction]):
         if isinstance(obj, BankAccount):
-            self.store["accounts"][obj.account_id] = obj
+            self.store["accounts"][obj.account_id] = type(obj)
         elif isinstance(obj, Transaction):
             self.store["transactions"][obj.transaction_id] = obj
         else:
@@ -96,8 +99,25 @@ class Ledger:
         return abs(sum(withdrawal_transactions))  # type: ignore
 
     def get_account(self, account_id: UUID) -> BankAccount:
+        """Get an account from the ledger
+
+        Arguments:
+            account_id {UUID} -- Id of account
+
+        Raises:
+            AccountNotFoundError: When account doesn't exist or is deleted
+
+        Returns:
+            BankAccount -- Returns a bank account object.
+        """
+        current_date = get_todays_date()
         try:
-            return self.store["accounts"][account_id]
+            account_class: typing.Type[BankAccount] = self.store["accounts"][account_id]
+            current_balance = self.get_account_balance(account_id)
+            amount_withdrawn_today = self.get_total_withdrawn_amount_by_date(
+                account_id, current_date
+            )
+            return account_class(account_id, current_balance, amount_withdrawn_today)
         except KeyError:
             raise AccountNotFoundError(
                 "Account not found, it has probably being closed"
