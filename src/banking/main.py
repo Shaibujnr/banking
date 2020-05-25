@@ -3,6 +3,7 @@ from functools import wraps
 from typing import Callable
 from uuid import UUID
 
+import json
 import typer
 
 from banking.application import Application
@@ -116,30 +117,42 @@ def ls(
         show_transactions {bool} -- Display transactions and details (default: {True})
         only_ids {bool} -- Display ids only no details (default: {False})
     """
-    # todo display entities properly
     accounts = []
     transactions = []
     store = banking_app.ledger.store
     if show_accounts:
         typer.echo(typer.style("\nAccounts", fg=typer.colors.MAGENTA))
         typer.echo(typer.style("===========", fg=typer.colors.MAGENTA))
-        accounts += store["accounts"].keys() if only_ids else banking_app.all_accounts()
+        accounts += (
+            [str(uid) for uid in store["accounts"].keys()]
+            if only_ids
+            else banking_app.all_accounts()
+        )
         accounts = accounts or ["-----No open account---"]
         typer.echo(
             "\n".join(
-                typer.style(str(acc), fg=typer.colors.BRIGHT_BLUE) for acc in accounts
+                typer.style(
+                    json.dumps(acc, indent=4, sort_keys=True),
+                    fg=typer.colors.BRIGHT_BLUE,
+                )
+                for acc in accounts
             )
         )
     if show_transactions:
         typer.echo(typer.style("\nTransactions", fg=typer.colors.MAGENTA))
         typer.echo(typer.style("===========", fg=typer.colors.MAGENTA))
         transactions += (
-            store["transactions"].keys() if only_ids else banking_app.all_transactions()
+            [str(uid) for uid in store["transactions"].keys()]
+            if only_ids
+            else banking_app.all_transactions()
         )
         transactions = transactions or ["-----No transaction----"]
         typer.echo(
             "\n".join(
-                typer.style(str(transaction), fg=typer.colors.BRIGHT_BLUE)
+                typer.style(
+                    json.dumps(transaction, indent=4, sort_keys=True),
+                    fg=typer.colors.BRIGHT_BLUE,
+                )
                 for transaction in transactions
             )
         )
@@ -154,7 +167,9 @@ def show(entity_id: str):
             typer.echo(typer.style("=========", fg=typer.colors.MAGENTA))
             typer.echo(
                 typer.style(
-                    str(banking_app.get_account_details(uid)),
+                    json.dumps(
+                        banking_app.get_account_details(uid), indent=4, sort_keys=True
+                    ),
                     fg=typer.colors.BRIGHT_BLUE,
                 )
             )
@@ -164,7 +179,11 @@ def show(entity_id: str):
             typer.echo(typer.style("=========", fg=typer.colors.MAGENTA))
             typer.echo(
                 typer.style(
-                    str(banking_app.ledger.store["transactions"][uid].to_dict()),
+                    json.dumps(
+                        banking_app.ledger.store["transactions"][uid].to_dict(),
+                        indent=4,
+                        sort_keys=True,
+                    ),
                     fg=typer.colors.BRIGHT_BLUE,
                 )
             )
