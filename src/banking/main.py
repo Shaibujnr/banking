@@ -18,6 +18,11 @@ DATE_FORMAT = "%Y-%m-%d"
 
 
 def set_occuring_on(func: Callable):
+    """Decorator function to set bank applications current
+    running date and performing whatever action is required
+    on that date.
+    """
+
     @wraps(func)
     def wrapper_func(*args, **kwargs):
         try:
@@ -48,12 +53,25 @@ def style(text: str, is_success: bool = True, bg=False) -> str:
 @app.command()
 @set_occuring_on
 def open(account_type: str, date: str = None):
-    """Open an account. Some accounts type usually require a minimum amount deposit
-    to be successfully opened. In this case, company accounts require a minimum initial
-    deposit of 5000.
+    """Open an account of a specific type.
 
-    Arguments:
-        account_type {str} -- One of either 'international', 'covid' or 'company'
+    Supported account types are
+
+    - international -- For international/foreign accounts BankAccount_INT
+
+    - covid -- For BankAccount_Covid19
+
+    - company -- For BankAccount_Covid19_Company
+
+    Use --date to optionally set/simulate the date this account is opened
+
+    date format is YYYY-mm-dd eg. 2020-04-01
+
+    Example:
+
+    - banking open covid
+
+    - banking open covid --date 2018-12-23
     """
     try:
         account_id: UUID = banking_app.open_account(account_type)  # type: ignore
@@ -72,14 +90,25 @@ def open(account_type: str, date: str = None):
 @app.command()
 @set_occuring_on
 def withdraw(account_id: str, amount: float, atm: bool = False, date: str = None):
-    """Withdraw from an account
+    """Withdraw funds from an account
 
-    Arguments:
-        account_id {str} -- Id of account to be debited
-        amount {float} -- Amount to withdraw from account
+    account_id -- Id of account to be debited
 
-    Keyword Arguments:
-        atm {bool} -- Is this an atm withdrawal? (default: {False})
+    amount -- Amount to withdraw from account
+
+    Use --atm flag to denote if the withdrawal method is via ATM or not (--no-atm)
+
+    The default withdrawal method is no atm
+
+    Use --date to optionally set/simulate the date this account is opened
+
+    date format is YYYY-mm-dd eg. 2020-04-01
+
+    Example:
+
+    - banking withdraw 7ae3fcfd-da50-43c3-9c6f-c5d1adaaebbc 45.37 --atm
+
+    - banking withdraw 7ae3fcfd-da50-43c3-9c6f-c5d1adaaebbc 45.37 --date 2018-12-23
     """
     try:
         transaction_id = banking_app.withdraw(UUID(account_id), amount, atm)
@@ -92,11 +121,21 @@ def withdraw(account_id: str, amount: float, atm: bool = False, date: str = None
 @app.command()
 @set_occuring_on
 def deposit(account_id: str, amount: float, date: str = None):
-    """Deposit into account
+    """Deposit funds into an account
 
-    Arguments:
-        account_id {str} -- Account to credit
-        amount {float} -- Amount to deposit into the account
+    account_id -- Id of account to be debited
+
+    amount -- Amount to withdraw from account
+
+    Use --date to optionally set/simulate the date this account is opened
+
+    date format is YYYY-mm-dd eg. 2020-04-01
+
+    Example:
+
+    - banking deposit 7ae3fcfd-da50-43c3-9c6f-c5d1adaaebbc 45.37
+
+    - banking deposit 7ae3fcfd-da50-43c3-9c6f-c5d1adaaebbc 45.37 --date 2018-12-23
     """
     try:
         transaction_id = banking_app.deposit(UUID(account_id), amount)
@@ -112,10 +151,15 @@ def ls(
 ):
     """Display all accounts and/or transactions
 
-    Keyword Arguments:
-        show_accounts {bool} -- Display accounts and details (default: {True})
-        show_transactions {bool} -- Display transactions and details (default: {True})
-        only_ids {bool} -- Display ids only no details (default: {False})
+    Use --show-accounts/--no-show-accounts flag to display/hide accounts. Default is --show-accounts.
+
+    Use --show-transactions/--no-show-transactions flag to display/hide transactions. Default is --show-transactions.
+
+    Use --only-ids flag to display only the ids of the accounts and/or transactions. Disabled by default.
+
+    Exmaple:
+
+    - banking ls --only-ids --no-show-accounts
     """
     accounts = []
     transactions = []
@@ -160,6 +204,14 @@ def ls(
 
 @app.command()
 def show(entity_id: str):
+    """Show details of a specific account/transaction
+
+    Enity_Id is the Id of the account or the transaction
+
+    Example:
+
+    - banking show 7ae3fcfd-da50-43c3-9c6f-c5d1adaaebbc
+    """
     try:
         uid: UUID = UUID(entity_id)
         if uid in banking_app.ledger.store["accounts"]:
@@ -199,10 +251,19 @@ def show(entity_id: str):
 @app.command()
 @set_occuring_on
 def close(account_id: str, date: str = None):
-    """Close account
+    """Close an account
 
-    Arguments:
-        account_id {str} -- Id of account to close
+    account_id -- Id of account to be closed
+
+    Use --date to optionally set/simulate the date this account is opened
+
+    date format is YYYY-mm-dd eg. 2020-04-01
+
+    Example:
+
+    - banking close 7ae3fcfd-da50-43c3-9c6f-c5d1adaaebbc
+
+    - banking close 7ae3fcfd-da50-43c3-9c6f-c5d1adaaebbc --date 2018-12-23
     """
     close = typer.confirm("Are you sure you want to close this account?")
     if not close:
