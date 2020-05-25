@@ -9,8 +9,10 @@ class InsufficientFundError(AccountError):
 class ClosingCompanyAccountError(AccountError):
     pass
 
+
 class DailyWithdrawalLimitError(AccountError):
     pass
+
 
 class AccountClosedError(AccountError):
     """
@@ -18,10 +20,13 @@ class AccountClosedError(AccountError):
     Should probably never be raised since closed account would
     be deleted
     """
+
     pass
+
 
 class ATMWithdrawalNotAllowedError(AccountError):
     pass
+
 
 class AccountNotFoundError(AccountError):
     pass

@@ -2,25 +2,26 @@ from datetime import datetime, date
 from typing import Literal, Optional, Dict, Type, List
 from uuid import UUID
 from banking.account import (
-    BankAccount, 
-    BankAccount_COVID19, 
-    BankAccount_COVID19_Company, 
-    BankAccount_INT, 
-    Transaction
+    BankAccount,
+    BankAccount_COVID19,
+    BankAccount_COVID19_Company,
+    BankAccount_INT,
+    Transaction,
 )
 from banking.ledger import Ledger
 
 
 AccountType = Literal["international", "company", "covid"]
 
+
 class Application:
 
-    CURRENT_DATE: date = datetime(2020, 4, 1).date() # April 1, 2020
-    
+    CURRENT_DATE: date = datetime(2020, 4, 1).date()  # April 1, 2020
+
     ACCOUNT_TYPE_CLASS_MAPPING: Dict[str, Type[BankAccount]] = {
         "international": BankAccount_INT,
         "covid": BankAccount_COVID19,
-        "company": BankAccount_COVID19_Company
+        "company": BankAccount_COVID19_Company,
     }
 
     def __init__(self, ledger_file_name: str) -> None:
@@ -31,7 +32,8 @@ class Application:
         try:
             open(self.ledger_file_name)
         except FileNotFoundError:
-            with open(self.ledger_file_name, 'wb'): pass
+            with open(self.ledger_file_name, "wb"):
+                pass
         self.ledger.load()
 
     def change_current_date(self, new_date: date):
@@ -44,7 +46,9 @@ class Application:
         return self.ledger.save_object(transaction)
 
     def open_account(self, account_type: AccountType) -> UUID:
-        account: BankAccount =  self.ACCOUNT_TYPE_CLASS_MAPPING[account_type].open(self.CURRENT_DATE)
+        account: BankAccount = self.ACCOUNT_TYPE_CLASS_MAPPING[account_type].open(
+            self.CURRENT_DATE
+        )
         self.save_account(account)
         return account.account_id
 
@@ -53,13 +57,10 @@ class Application:
         account = ledger.get_account(account_id)
         current_account_balance: float = ledger.get_account_balance(account_id)
         amount_withdrawn_today = ledger.get_total_withdrawn_amount_by_date(
-            account_id,
-            self.CURRENT_DATE
+            account_id, self.CURRENT_DATE
         )
         transaction = account.close(
-            current_account_balance,
-            self.CURRENT_DATE,
-            amount_withdrawn_today
+            current_account_balance, self.CURRENT_DATE, amount_withdrawn_today
         )
         if transaction is not None:
             self.save_transaction(transaction)
@@ -77,15 +78,17 @@ class Application:
             current_account_balance,
             is_atm,
             self.CURRENT_DATE,
-            amount_withdrawn_on_date
+            amount_withdrawn_on_date,
         )
         self.save_transaction(transaction)
         return transaction.transaction_id
-    
+
     def deposit(self, account_id: UUID, amount: float) -> UUID:
         account = self.ledger.get_account(account_id)
         current_account_balance = self.ledger.get_account_balance(account_id)
-        transaction = account.deposit(amount, current_account_balance, self.CURRENT_DATE)
+        transaction = account.deposit(
+            amount, current_account_balance, self.CURRENT_DATE
+        )
         self.save_transaction(transaction)
         return transaction.transaction_id
 
