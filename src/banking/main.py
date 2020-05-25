@@ -165,7 +165,8 @@ def ls(
     transactions = []
     store = banking_app.ledger.store
     if show_accounts:
-        typer.echo(typer.style("\nAccounts", fg=typer.colors.MAGENTA))
+        title: str = "Account Ids" if only_ids else "Accounts"
+        typer.echo(typer.style(f"\n{title}", fg=typer.colors.MAGENTA))
         typer.echo(typer.style("===========", fg=typer.colors.MAGENTA))
         accounts += (
             [str(uid) for uid in store["accounts"].keys()]
@@ -183,7 +184,8 @@ def ls(
             )
         )
     if show_transactions:
-        typer.echo(typer.style("\nTransactions", fg=typer.colors.MAGENTA))
+        title: str = "Transaction Ids" if only_ids else "Transactions"
+        typer.echo(typer.style(f"\n{title}", fg=typer.colors.MAGENTA))
         typer.echo(typer.style("===========", fg=typer.colors.MAGENTA))
         transactions += (
             [str(uid) for uid in store["transactions"].keys()]
