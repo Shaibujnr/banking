@@ -48,20 +48,24 @@ The close method uses the current account balance and fires the `withdraw` metho
 Company accounts cannot be closed.
 
 ## Ledger
-The Ledger class is responsible for storing and retriving all `accounts` and `transactions`. It is also responsible for computing an accounts `current account balance` from all of the accounts previous CREDIT and DEBIT transactions.
+The Ledger class is responsible for storing and retriving all `accounts` and `transactions`. It is also responsible for constructing an computing an accounts current state from all of the accounts previous CREDIT and DEBIT transactions.
 
-The ledger is also responsible for computing the sum of amount withdrawn from an account on a specified date.
-
-The ledger method is also responsible for deleting an account when it is closed.
+The ledger is also responsible for deleting an account when it is closed.
 
 `NOTE`: When an account is closed and deleted, it's transactions are left intact for reference purposes.
+
+#### Ledger Implementation
+The ledger stores accounts and transactions in two `OrderedDicts` one for each with the key of the OrderedDicts being the accountId and transactionId.
+
+The `value` for the accounts OrderedDict is the `class` the account belongs to i.e one of `BankAccount_INT`, `BankAccount_Covid19` or `BankAccount_Covid19_Company`. The ledger uses the accounts transactions to get the current state of the account and therefore it does not need to store the entire account object.
+
+The `value` for the transactions OrderedDict is the transaction object itself as is.
 
 ## Application
 
 The application sits on the domain models [`BankAccount` and `Transaction`] and attaches persistence to them. It provides services methods with a similar API to that of the `BankAccount`. These service methods are the use cases of the banking application.
 
-It is reponsible for persisting new accounts and transactions in the ledger. It also fetches all the required
-details necessary for a `BankAccount` to validate and complete an action from the `ledger`.
+It is reponsible for persisting new accounts and transactions in the ledger.
 
 
 ## CLI
