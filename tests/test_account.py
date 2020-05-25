@@ -1,22 +1,21 @@
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from typing import List, Optional
 from uuid import uuid4
+
 import pytest
-from tests.conftest import company_account, covid_account, foreign_account
+
 from banking.account import (
-    BankAccount,
-    Transaction,
-    BankAccount_INT,
     BankAccount_COVID19,
     BankAccount_COVID19_Company,
+    BankAccount_INT,
+    Transaction,
 )
 from banking.error import (
-    ATMWithdrawalNotAllowedError,
     AccountError,
+    ATMWithdrawalNotAllowedError,
     ClosingCompanyAccountError,
-    InsufficientFundError,
-    AccountClosedError,
     DailyWithdrawalLimitError,
+    InsufficientFundError,
 )
 
 

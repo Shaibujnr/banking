@@ -1,6 +1,7 @@
-from datetime import datetime, date
-from typing import Literal, Optional, Dict, Type, List
+from datetime import date, datetime
+from typing import Dict, List, Literal, Optional, Type
 from uuid import UUID
+
 from banking.account import (
     BankAccount,
     BankAccount_COVID19,
@@ -9,7 +10,6 @@ from banking.account import (
     Transaction,
 )
 from banking.ledger import Ledger
-
 
 AccountType = Literal["international", "company", "covid"]
 

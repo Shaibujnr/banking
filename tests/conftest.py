@@ -1,12 +1,14 @@
 from datetime import datetime
-import pytest
 from uuid import UUID, uuid4
+
+import pytest
+
 from banking.account import (
     BankAccount,
-    Transaction,
-    BankAccount_INT,
     BankAccount_COVID19,
     BankAccount_COVID19_Company,
+    BankAccount_INT,
+    Transaction,
 )
 from banking.application import Application
 from banking.ledger import Ledger

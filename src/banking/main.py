@@ -1,8 +1,10 @@
 from datetime import date, datetime
-import typer
-from uuid import UUID
 from functools import wraps
 from typing import Callable
+from uuid import UUID
+
+import typer
+
 from banking.application import Application
 from banking.error import AccountError
 

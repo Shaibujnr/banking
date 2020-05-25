@@ -1,11 +1,13 @@
-import pytest
 from datetime import datetime, timedelta
 from uuid import UUID
-from banking.account import BankAccount, BankAccount_COVID19
+
+import pytest
+
+from banking.account import BankAccount
 from banking.application import Application
 from banking.error import (
-    ATMWithdrawalNotAllowedError,
     AccountNotFoundError,
+    ATMWithdrawalNotAllowedError,
     ClosingCompanyAccountError,
     DailyWithdrawalLimitError,
 )

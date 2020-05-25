@@ -1,7 +1,8 @@
 from collections import OrderedDict
 from datetime import datetime
 from uuid import uuid4
-from banking.account import BankAccount, BankAccount_INT, Transaction
+
+from banking.account import Transaction
 from banking.ledger import Ledger
 
 # todo write better ledger tests
@@ -63,4 +64,3 @@ def test_get_account_balance():
     assert not ledger.is_empty
     current_balance = ledger.get_account_balance(mock_account_id)
     assert current_balance == (400 + 37.99 - 23.47 - 350.26 + 600)
-

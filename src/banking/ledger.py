@@ -2,9 +2,9 @@ import pickle
 import typing
 from collections import OrderedDict
 from datetime import date
+from typing import Optional
 from uuid import UUID
 
-from typing import Optional
 from banking.account import BankAccount, Transaction
 from banking.error import AccountNotFoundError
 
@@ -91,4 +91,3 @@ class Ledger:
     @property
     def is_empty(self) -> bool:
         return len(self.store["accounts"]) == 0 and len(self.store["transactions"]) == 0
-
