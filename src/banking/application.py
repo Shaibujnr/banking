@@ -43,7 +43,7 @@ class Application:
     def save_transaction(self, transaction: Transaction):
         return self.ledger.save_object(transaction)
 
-    def open_account(self, account_type: AccountType, amount: float = 0) -> UUID:
+    def open_account(self, account_type: AccountType) -> UUID:
         account: BankAccount =  self.ACCOUNT_TYPE_CLASS_MAPPING[account_type].open(self.CURRENT_DATE)
         self.save_account(account)
         return account.account_id
@@ -51,7 +51,7 @@ class Application:
     def close_account(self, account_id: UUID) -> Optional[UUID]:
         account = self.ledger.get_account(account_id)
         current_account_balance: float = self.ledger.get_account_balance(account_id)
-        transaction = account.close(current_account_balance)
+        transaction = account.close(current_account_balance, self.CURRENT_DATE)
         if transaction is not None:
             self.save_transaction(transaction)
         self.ledger.close_account(account_id)
@@ -76,7 +76,7 @@ class Application:
     def deposit(self, account_id: UUID, amount: float) -> UUID:
         account = self.ledger.get_account(account_id)
         current_account_balance = self.ledger.get_account_balance(account_id)
-        transaction = account.deposit(amount, current_account_balance)
+        transaction = account.deposit(amount, current_account_balance, self.CURRENT_DATE)
         self.save_transaction(transaction)
         return transaction.transaction_id
 
@@ -86,13 +86,19 @@ class Application:
             result.append(self.get_account_details(account_id))
         return result
 
+    def all_transactions(self) -> List[dict]:
+        result = []
+        for transaction in self.ledger.store["transactions"].values():
+            result.append(transaction.to_dict())
+        return result
+
     def get_account_details(self, account_id: UUID) -> dict:
         result = {}
         account = self.ledger.get_account(account_id)
         balance = self.ledger.get_account_balance(account_id)
-        result["account_id"] = account_id
-        result["opened_on"] = account.opened_on
-        result["balance"] = balance
+        result["account_id"] = str(account_id)
+        result["opened_on"] = account.opened_on.strftime("%Y-%m-%d")
+        result["balance"] = f"{balance} PLN"
         result["type"] = self.__get_account_type(account)
         return result
 

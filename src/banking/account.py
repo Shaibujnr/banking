@@ -38,6 +38,15 @@ class Transaction:
         else:
             return other - self.amount
 
+    def to_dict(self):
+        return {
+            "transaction_id": str(self.transaction_id),
+            "account_id": str(self.account_id),
+            "transaction_type": self.transaction_type.value,
+            "occured_on": self.occured_on.strftime("%Y-%m-%d"),
+            "amount": f"{self.amount} PLN"
+        }
+
     @classmethod
     def create(
         cls, 
@@ -62,12 +71,18 @@ class BankAccount:
         account = cls(opened_on=opened_on)
         return account
 
-    def deposit(self, amount: float, current_balance: float) -> Transaction:
+    def deposit(
+        self, 
+        amount: float, 
+        current_balance: float, 
+        occurring_on: Optional[date] = None
+    ) -> Transaction:
         assert amount > 0
         return Transaction.create(
             self.account_id,
             Transaction.TransactionType.CREDIT,
-            amount
+            amount,
+            occurring_on
         )
 
     def withdraw(
@@ -85,19 +100,21 @@ class BankAccount:
             occuring_on,
             total_daily_amount_withdrawn
         )
-        return self.debit(amount)    
+        return self.debit(amount, occuring_on)    
 
-    def debit(self, amount: float) -> Transaction:
+    def debit(self, amount: float, occuring_on: Optional[date] = None) -> Transaction:
+        #todo should debit?
         return Transaction.create(
             self.account_id,
             Transaction.TransactionType.DEBIT,
-            amount
+            amount,
+            occuring_on
         )
 
-    def close(self, current_balance: float) -> Optional[Transaction]:
+    def close(self, current_balance: float, occuring_on: Optional[date] = None) -> Optional[Transaction]:
         """withdraw balance and close the account"""
         if current_balance > 0:
-            return self.debit(current_balance)
+            return self.debit(current_balance, occuring_on)
 
     def assert_can_withdraw(
         self, 
@@ -148,12 +165,17 @@ class BankAccount_COVID19_Company(BankAccount_COVID19):
 
     MINIMUM_ACCOUNT_BALANCE = 5000
 
-    def deposit(self, amount: float, current_balance: float) -> Transaction:
+    def deposit(
+        self, 
+        amount: float, 
+        current_balance: float, 
+        occurring_on: Optional[date] = None
+    ) -> Transaction:
         if current_balance == 0 and amount < self.MINIMUM_ACCOUNT_BALANCE: 
             raise AccountError(f"Company first deposit must be non-returnable government loan\
                 of {self.MINIMUM_ACCOUNT_BALANCE}")
-        return super().deposit(amount, current_balance)
+        return super().deposit(amount, current_balance, occurring_on)
 
-    def close(self, current_balance: float):
+    def close(self, current_balance: float, occuring_on: Optional[date] = None) -> Optional[Transaction]:
         raise ClosingCompanyAccountError("Company account cannot be closed")
     

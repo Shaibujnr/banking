@@ -16,15 +16,15 @@ def test_open_account(app: Application):
     assert isinstance(international_account_id, UUID)
     covid_account_id = app.open_account("covid")
     assert isinstance(covid_account_id, UUID)
-    company_account_id = app.open_account("company", 7000)
+    company_account_id = app.open_account("company")
     assert isinstance(company_account_id, UUID)
 
 def test_get_account_details(app: Application):
     account_id = app.open_account("international")
     account_details = app.get_account_details(account_id)
     assert isinstance(account_details, dict)
-    assert account_details["balance"] == 0
-    assert account_details["opened_on"] == app.CURRENT_DATE
+    assert account_details["balance"] == '0 PLN'
+    assert account_details["opened_on"] == app.CURRENT_DATE.strftime("%Y-%m-%d")
 
 def test_deposit_into_account(app: Application):
     account_id = app.open_account("covid")
@@ -84,7 +84,7 @@ def test_withdraw_more_than_max_from_covid_account_before_april_1_2020_ok(app: A
     )
 
 def test_close_company_account_fail(app: Application):
-    account_id = app.open_account("company", 5000)
+    account_id = app.open_account("company")
     with pytest.raises(ClosingCompanyAccountError):
         app.close_account(account_id)
 

@@ -44,6 +44,9 @@ class Ledger:
     def all_account_ids(self) -> typing.List[UUID]:
         return self.store["accounts"].keys()
 
+    def all_transaction_ids(self) -> typing.List[UUID]:
+        return self.store["transactions"].keys()
+
     def get_account_balance(self, account_id: UUID) -> float:
         account_transactions: typing.List[Transaction] = []
         for transaction in self.store["transactions"].values():
